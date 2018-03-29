@@ -33,13 +33,6 @@ public class Bot extends TelegramLongPollingBot {
 
 
     public void onUpdateReceived(Update update) {
-        YouTubeSubscriber subscriber = new YouTubeSubscriber();
-        try {
-            subscriber.getLastVideoUrl();
-        } catch (Exception e) {
-
-        }
-
         Message message = update.getMessage();
         if (message != null && message.hasText()) {
             SendMessage sendMessage = new SendMessage()
