@@ -1,57 +1,80 @@
 package com.fujitsu.azurebot;
 
-import org.telegram.telegrambots.exceptions.TelegramApiException;
-import org.telegram.telegrambots.ApiContextInitializer;
-import org.telegram.telegrambots.TelegramBotsApi;
+import com.fujitsu.azurebot.youtube.YouTubeSubscriber;
 import org.telegram.telegrambots.api.methods.send.SendMessage;
 import org.telegram.telegrambots.api.objects.Message;
 import org.telegram.telegrambots.api.objects.Update;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
+import org.telegram.telegrambots.exceptions.TelegramApiException;
+
+import java.util.Properties;
 
 public class Bot extends TelegramLongPollingBot {
 
-    public static void main(String[] args) {
-        ApiContextInitializer.init();
-        TelegramBotsApi telegramBotsApi = new TelegramBotsApi();
+    private Properties properties = new Properties();
+
+
+    public Bot() {
+        super(new MyBotOptions());
         try {
-            telegramBotsApi.registerBot(new Bot());
-        } catch (TelegramApiException e) {
+            properties.load(Bot.class.getResourceAsStream("/bot.properties"));
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    @Override
     public String getBotUsername() {
-        return "filipptest_bot";
+        return properties.getProperty("bot.username");
     }
 
-    @Override
     public String getBotToken() {
-        return "595842251:AAFE1w4iu8anRieBaBoibALRQ8gN_jbeQaQ";
+        return properties.getProperty("bot.token");
     }
 
-    @Override
+
     public void onUpdateReceived(Update update) {
+        YouTubeSubscriber subscriber = new YouTubeSubscriber();
+        try {
+            subscriber.getLastVideoUrl();
+        } catch (Exception e) {
+
+        }
+
         Message message = update.getMessage();
         if (message != null && message.hasText()) {
-            if (message.getText().equals("/help"))
-                sendMsg(message, "Привет, я робот");
-            else
-                sendMsg(message, "Я не знаю что ответить на это");
+            SendMessage sendMessage = new SendMessage()
+                    .setChatId(message.getChatId().toString())
+                    .setReplyToMessageId(message.getMessageId())
+                    .setText("I won't tell you anything, dude");
+            try {
+                execute(sendMessage);
+            } catch (TelegramApiException e) {
+                e.printStackTrace();
+            }
         }
     }
 
-    private void sendMsg(Message message, String text) {
-        SendMessage sendMessage = new SendMessage();
-        sendMessage.enableMarkdown(true);
-        sendMessage.setChatId(message.getChatId().toString());
-        sendMessage.setReplyToMessageId(message.getMessageId());
-        sendMessage.setText(text);
-        try {
-            sendMessage(sendMessage);
-        } catch (TelegramApiException e) {
-            e.printStackTrace();
+    public void sendMessageToChannel(String message, String channelId) {
+
+        if (message != null && channelId != null) {
+            SendMessage sendMessage = new SendMessage()
+                    .setChatId(channelId)
+                    .setText(message);
+            try {
+                execute(sendMessage);
+            } catch (TelegramApiException e) {
+                e.printStackTrace();
+            }
+        } else if (message == null && channelId == null) {
+            System.err.println("You try to send null message to null channel");
+        } else if (message == null && channelId != null) {
+            System.err.println("You try to send null message to channel");
+        } else if (message != null && channelId == null) {
+            System.err.println("You try to send message to null channel");
+        } else {
+            System.err.println("Unexpected error in Bot class");
         }
     }
+
 
 }
