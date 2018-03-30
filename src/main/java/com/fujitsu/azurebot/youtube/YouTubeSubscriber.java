@@ -3,13 +3,14 @@ package com.fujitsu.azurebot.youtube;
 import com.google.api.client.googleapis.json.GoogleJsonResponseException;
 import com.google.api.client.http.HttpRequest;
 import com.google.api.client.http.HttpRequestInitializer;
+import com.google.api.client.util.DateTime;
 import com.google.api.services.youtube.YouTube;
 import com.google.api.services.youtube.model.ResourceId;
 import com.google.api.services.youtube.model.SearchListResponse;
 import com.google.api.services.youtube.model.SearchResult;
-import com.google.api.services.youtube.model.SearchResultSnippet;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import com.google.api.client.util.DateTime;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Date;
@@ -23,7 +24,7 @@ public class YouTubeSubscriber {
      * contains the developer's API key.
      */
     private static final String PROPERTIES_FILENAME = "youtube.properties";
-
+    private Logger log = LoggerFactory.getLogger(YouTubeSubscriber.class);
     private static final long NUMBER_OF_VIDEOS_RETURNED = 2;
     private static String CHANNEL_ID;
 
@@ -49,6 +50,9 @@ public class YouTubeSubscriber {
             System.err.println("There was an error reading " + PROPERTIES_FILENAME + ": " + e.getCause()
                     + " : " + e.getMessage());
             System.exit(1);
+
+            log.error("Error in reading properties file", e);
+
         }
         CHANNEL_ID = properties.getProperty("channel.id");
         System.setProperty("https.proxyHost", properties.getProperty("https.proxyHost"));
@@ -99,9 +103,13 @@ public class YouTubeSubscriber {
         } catch (GoogleJsonResponseException e) {
             System.err.println("There was a service error: " + e.getDetails().getCode() + " : "
                     + e.getDetails().getMessage());
+
+            log.error("Google JSON Response service error", e);
         } catch (IOException e) {
             System.err.println("There was an IO error: " + e.getCause() + " : " + e.getMessage());
+            log.error("IO error in Youtube subscriber", e);
         } catch (Throwable t) {
+            log.error("Throwable error in Youtube subscriber", t);
             t.printStackTrace();
         }
 
@@ -111,7 +119,7 @@ public class YouTubeSubscriber {
     /*
      * Prompt the user to enter a query term and return the user-specified term.
      */
-    private static String getInputQuery() throws IOException {
+    private static String getInputQuery() {
 
         /*String inputQuery = "";
 

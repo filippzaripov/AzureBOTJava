@@ -2,3 +2,5 @@
 target/
 *.iml
 *.properties
+*.log
+Procfile
